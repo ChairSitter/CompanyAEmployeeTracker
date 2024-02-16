@@ -15,7 +15,8 @@ const viewRole = async() => {
 
 const viewDepartment = async() => {
     const result = await sequelize.query("SELECT * FROM department");
-    
+    console.log(result[0]);
+    return result[0];
 }
 
 const addEmployee = async() => {
@@ -64,7 +65,20 @@ const addEmployee = async() => {
     console.log(response.firstname);
     console.log(response.lastname);
     console.log(response.role);
-    console.log(response.manager)
+    console.log(response.manager);
+    try {
+        sequelize.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ('${response.firstname}', '${response.lastname}', ${response.role}, ${response.manager})`);
+    } catch(error) {
+        console.log(error);
+    }
+}
+
+const addRole = async() => {
+
+}
+
+const addDepartment = async() => {
+    
 }
 
 //view all departments, view all roles, view all employees, 
@@ -112,15 +126,15 @@ const start = async() => {
     switch(selection){
         case "VIEW DEPT":
             console.log("you chose department view")
-            viewDepartment();
+            const departmentsArray = viewDepartment();
             break;
         case "VIEW ROLE":
             console.log("you chose role view")
-            viewRole();
+            const rolesArray = viewRole();
             break;
         case "VIEW EMP":
             console.log("you chose employee view")
-            viewEmployee();
+            const employeeArray = viewEmployee();
             break;
         case "ADD DEPT":
             console.log("you chose add department")
