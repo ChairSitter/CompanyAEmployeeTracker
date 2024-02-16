@@ -2,7 +2,7 @@ const sequelize = require('./config/connection');
 const inquirer = require('inquirer');
 
 const start = async() => {
-    const response = await inquirer.createPromptModule([
+    const response = await inquirer.prompt([
         {
             type: "list",
             message: "choose an option below:",
@@ -21,6 +21,4 @@ const start = async() => {
     ])
 }
 
-sequelize.sync({force: false}).then(() => {
-    console.log("connection successful!")
-})
+sequelize.sync({force: false}).then(start)
