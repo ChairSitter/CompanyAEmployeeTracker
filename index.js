@@ -3,24 +3,20 @@ const inquirer = require('inquirer');
 
 const viewEmployee = async() => {
     const result = await sequelize.query("SELECT * FROM employee");
-    // console.log(result[0]);
     return result[0];
 }
 
 const viewRole = async() => {
     const result = await sequelize.query("SELECT * FROM role");
-    // console.log(result[0]);
     return result[0];
 }
 
 const viewDepartment = async() => {
     const result = await sequelize.query("SELECT * FROM department");
-    // console.log(result[0]);
     return result[0];
 }
 
 const addEmployee = async() => {
-    //first_name, last_name, role_id, manager_id
     const employeeInfo = await viewEmployee();
     const roleInfo = await viewRole();
 
@@ -272,6 +268,50 @@ const viewEmpByDepartment = async() => {
     return employeeArray;
 }
 
+const deleteDepartment = async() => {
+    const departmentInfo = await viewDepartment();
+    const roleInfo = await viewRole();
+    const departmentPrompt = departmentInfo.map((department) => {
+        return {
+            name: department.name,
+            value: department.id
+        }
+    })
+    const response = await inquirer.prompt([
+        {
+            type: "list",
+            message: "Please choose a department",
+            name: "departmentID",
+            choices: departmentPrompt
+        }
+    ])
+    try {
+        sequelize.query(`DELETE FROM department WHERE id = ${response.departmentID}`);
+    } catch(error) {
+        console.log(error);
+    }
+    for(let i = 0; i < roleInfo.length; i++){
+        if(roleInfo[i].department_id === response.departmentID){
+            try {
+                sequelize.query(`UPDATE role SET department_id = null WHERE department_id = ${response.departmentID}`);
+            } catch(error) {
+                console.log(error);
+            }
+        }
+    }
+
+}
+
+const deleteRole = async() => {
+    const roleInfo = await viewRole();
+
+}
+
+const deleteEmployee = async() => {
+    const employeeInfo = await viewEmployee();
+
+}
+
 const start = async() => {
     console.log("Welcome to Company A Employee Manager.")
     const response = await inquirer.prompt([
@@ -293,6 +333,14 @@ const start = async() => {
                     value: "VIEW EMP"
                 },
                 {
+                    name: "View employees by manager",
+                    value: "VIEW EMP BY MANAGER"
+                },
+                {
+                    name: "View employees by department",
+                    value: "VIEW EMP BY DEPARTMENT"
+                },
+                {
                     name: "Add new department",
                     value: "ADD DEPT" 
                 },
@@ -312,15 +360,17 @@ const start = async() => {
                     name: "Update an employee's manager",
                     value: "UPDATE EMP MANAGER"  
                 },
-                //need to implement:
                 {
-                    name: "View employees by manager",
-                    value: "VIEW EMP BY MANAGER"
+                    name: "Delete department",
+                    value: "DELETE DEPARTMENT"
                 },
-                //need to implement:
                 {
-                    name: "View employees by department",
-                    value: "VIEW EMP BY DEPARTMENT"
+                    name: "Delete role",
+                    value: "DELETE ROLE"                
+                },
+                {
+                    name: "Delete employee",
+                    value: "DELETE EMPLOYEE"
                 }
             ]
         }
@@ -373,6 +423,9 @@ const start = async() => {
             console.log("You chose view employees by department.");
             const employeesByDepartment = await viewEmpByDepartment();
             console.table(employeesByDepartment);
+            break;
+        case "DELETE DEPARTMENT":
+            deleteDepartment();
             break;
     }
 }
