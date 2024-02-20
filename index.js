@@ -114,7 +114,6 @@ const addRole = async() => {
 }
 
 const addDepartment = async() => {
-    //name
     const response = await inquirer.prompt([
         {
             type: "text",
@@ -240,6 +239,39 @@ const viewEmpByManager = async() => {
     return employeeArray;
 }
 
+const viewEmpByDepartment = async() => {
+    const departmentInfo = await viewDepartment();
+    const roleInfo = await viewRole();
+    const employeeInfo = await viewEmployee();
+    let departmentRoleArray = [];
+    let employeeArray = [];
+    const departmentPrompt = departmentInfo.map((department) => {
+        return {
+            name: department.name,
+            value: department.id
+        }
+    })
+    const response = await inquirer.prompt([
+        {
+            type: "list",
+            message: "Please choose a department to view its employees:",
+            name: "department",
+            choices: departmentPrompt
+        }
+    ])
+    for(let i = 0; i < roleInfo.length; i++){
+        if(roleInfo[i].department_id === response.department){
+            departmentRoleArray.push(roleInfo[i].id);
+        }
+    }
+    for(let j = 0; j < employeeInfo.length; j++){
+        if(departmentRoleArray.includes(employeeInfo[j].role_id)){
+            employeeArray.push(employeeInfo[j]);
+        }
+    }
+    return employeeArray;
+}
+
 const start = async() => {
     console.log("Welcome to Company A Employee Manager.")
     const response = await inquirer.prompt([
@@ -339,12 +371,12 @@ const start = async() => {
             break;
         case "VIEW EMP BY DEPARTMENT":
             console.log("You chose view employees by department.");
-            viewEmpByDepartment();
+            const employeesByDepartment = await viewEmpByDepartment();
+            console.table(employeesByDepartment);
             break;
     }
 }
 
-// View employees by department.
 // Delete departments, roles, and employees.
 // View the total utilized budget of a department&mdash;
 // in other words, the combined salaries of all employees in that department.
