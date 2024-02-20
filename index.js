@@ -131,15 +131,121 @@ const addDepartment = async() => {
     }
 }
 
-//view all departments, view all roles, view all employees, 
-//add a department, add a role, add an employee, 
-//and update an employee role
+const updateEmpRole = async() => {
+    const employeeInfo = await viewEmployee();
+    const roleInfo = await viewRole();
 
-const start = async() => {
+    const employeePrompt = employeeInfo.map((employee) => {
+        return {
+            name: employee.first_name + " " + employee.last_name,
+            value: employee.id
+        }
+    })
+
+    const rolePrompt = roleInfo.map((role) => {
+        return {
+            name: role.title,
+            value: role.id
+        }
+    })
+
     const response = await inquirer.prompt([
         {
             type: "list",
-            message: "choose an option below:",
+            message: "Please choose an employee to update",
+            name: "employee",
+            choices: employeePrompt  
+        },
+        {
+            type: "list",
+            message: "Please choose a role for this employee",
+            name: "role",
+            choices: rolePrompt
+        }
+    ])
+
+    try {
+        sequelize.query(`UPDATE employee SET role_id = ${response.role} WHERE id = ${response.employee}`);
+    } catch(error) {
+        console.log(error);
+    }
+}
+
+const updateEmpManager = async() => {
+    const employeeInfo = await viewEmployee();
+
+    const employeePrompt = employeeInfo.map((employee) => {
+        return {
+            name: employee.first_name + " " + employee.last_name,
+            value: employee.id
+        }
+    })
+
+    const response = await inquirer.prompt([
+        {
+            type: "list",
+            message: "Please choose an employee to update",
+            name: "employee",
+            choices: employeePrompt  
+        },
+        {
+            type: "list",
+            message: "Please choose a manager for this employee",
+            name: "manager",
+            choices: employeePrompt
+        }
+    ])
+
+    try {
+        sequelize.query(`UPDATE employee SET manager_id = ${response.manager} WHERE id = ${response.employee}`);
+    } catch(error) {
+        console.log(error);
+    }
+}
+
+const viewEmpByManager = async() => {
+    const employeeInfo = await viewEmployee();
+    let managerIds = [];
+    let viewManagers = [];
+    let employeeArray = [];
+    for(let i = 0; i < employeeInfo.length; i++){
+        if(employeeInfo[i].manager_id){
+            managerIds.push(employeeInfo[i].manager_id);
+        }
+    }
+    for(let j = 0; j < employeeInfo.length; j++){
+        if(managerIds.includes(employeeInfo[j].id)){
+            viewManagers.push(employeeInfo[j]);
+        }
+    }
+    const managerPrompt = viewManagers.map((manager) => {
+        return {
+            name: manager.first_name + " " + manager.last_name,
+            value: manager.id
+        }
+    })
+    const response = await inquirer.prompt([
+        {
+            type: "list",
+            message: "Please choose a manager to view their employees:",
+            name: "manager",
+            choices: managerPrompt
+        }
+    ])
+    for(let k = 0; k < employeeInfo.length; k++){
+        if(employeeInfo[k].manager_id === response.manager){
+            employeeArray.push(employeeInfo[k]);
+        }
+    }
+    return employeeArray;
+}
+
+const start = async() => {
+    console.log("Welcome to Company A Employee Manager.")
+    const response = await inquirer.prompt([
+        {
+            type: "list",
+            message: "Please choose an option below:",
             name: "selection",
             choices: [
                 {
@@ -153,7 +259,7 @@ const start = async() => {
                 {
                     name: "View all employees",
                     value: "VIEW EMP"
-                },      
+                },
                 {
                     name: "Add new department",
                     value: "ADD DEPT" 
@@ -166,7 +272,24 @@ const start = async() => {
                     name: "Add new employee",
                     value: "ADD EMP" 
                 },
-
+                {
+                    name: "Update an employee's role",
+                    value: "UPDATE EMP ROLE"
+                },
+                {
+                    name: "Update an employee's manager",
+                    value: "UPDATE EMP MANAGER"  
+                },
+                //need to implement:
+                {
+                    name: "View employees by manager",
+                    value: "VIEW EMP BY MANAGER"
+                },
+                //need to implement:
+                {
+                    name: "View employees by department",
+                    value: "VIEW EMP BY DEPARTMENT"
+                }
             ]
         }
     ])
@@ -175,34 +298,55 @@ const start = async() => {
 
     switch(selection){
         case "VIEW DEPT":
-            console.log("you chose department view")
-            const departmentsArray = viewDepartment();
+            console.log("You chose view all departments.")
+            const departmentsArray = await viewDepartment();
+            console.table(departmentsArray);
             break;
         case "VIEW ROLE":
-            console.log("you chose role view")
-            const rolesArray = viewRole();
+            console.log("You chose view all roles.")
+            const rolesArray = await viewRole();
+            console.table(rolesArray);
             break;
         case "VIEW EMP":
-            console.log("you chose employee view")
-            const employeeArray = viewEmployee();
+            console.log("You chose view all employees.")
+            const employeeArray = await viewEmployee();
+            console.table(employeeArray);
             break;
         case "ADD DEPT":
-            console.log("you chose add department")
+            console.log("You chose add department.")
             addDepartment();
             break;
         case "ADD ROLE":
-            console.log("you chose add role")
+            console.log("You chose add role.")
             addRole();
             break;
         case "ADD EMP":
-            console.log("you chose add employee")
+            console.log("You chose add employee.")
             addEmployee();
+            break;
+        case "UPDATE EMP ROLE":
+            console.log("You chose update an employee's role.");
+            updateEmpRole();
+            break;
+        case "UPDATE EMP MANAGER":
+            console.log("You chose update an employee's manager.");
+            updateEmpManager();
+            break;
+        case "VIEW EMP BY MANAGER":
+            console.log("You chose view employees by manager.");
+            const employeesByManager = await viewEmpByManager();
+            console.table(employeesByManager);
+            break;
+        case "VIEW EMP BY DEPARTMENT":
+            console.log("You chose view employees by department.");
+            viewEmpByDepartment();
             break;
     }
 }
 
+// View employees by department.
+// Delete departments, roles, and employees.
+// View the total utilized budget of a department&mdash;
+// in other words, the combined salaries of all employees in that department.
+
 sequelize.sync({force: false}).then(start)
-
-//view employees, view roles, also view departments, also be able to add/update employees
-
-//Possibly create a class for each, and a method on each to view, add, do whatever else, then instantiate them in this file and do what's needed
