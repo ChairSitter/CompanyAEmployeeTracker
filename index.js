@@ -3,19 +3,19 @@ const inquirer = require('inquirer');
 
 const viewEmployee = async() => {
     const result = await sequelize.query("SELECT * FROM employee");
-    console.log(result[0]);
+    // console.log(result[0]);
     return result[0];
 }
 
 const viewRole = async() => {
     const result = await sequelize.query("SELECT * FROM role");
-    console.log(result[0]);
+    // console.log(result[0]);
     return result[0];
 }
 
 const viewDepartment = async() => {
     const result = await sequelize.query("SELECT * FROM department");
-    console.log(result[0]);
+    // console.log(result[0]);
     return result[0];
 }
 
@@ -74,11 +74,61 @@ const addEmployee = async() => {
 }
 
 const addRole = async() => {
+    //title, salary, department_id
+    const departmentInfo = await viewDepartment();
 
+    const departmentPrompt = departmentInfo.map((department) => {
+        return {
+            name: department.name,
+            value: department.id
+        }
+    })
+
+    const response = await inquirer.prompt([
+        {
+            type: "text",
+            message: "Please enter a job title",
+            name: "roletitle",
+        },
+        {
+            type: "text",
+            message: "Please enter a job salary",
+            name: "rolesalary",
+        },
+        {
+            type: "list",
+            message: "Please choose a department",
+            name: "departmentID",
+            choices: departmentPrompt
+        }
+    ])
+    console.log(response.roletitle)
+    console.log(response.rolesalary)
+    console.log(response.departmentID)
+
+    try {
+        sequelize.query(`INSERT INTO role (title, salary, department_id) VALUES ('${response.roletitle}', '${response.rolesalary}', ${response.departmentID})`);
+    } catch(error) {
+        console.log(error);
+    }
 }
 
 const addDepartment = async() => {
-    
+    //name
+    const response = await inquirer.prompt([
+        {
+            type: "text",
+            message: "Please enter a department name",
+            name: "departmentname",
+        }
+    ])
+    console.log(response.departmentname)
+
+    try {
+        sequelize.query(`INSERT INTO department (name) VALUES ('${response.departmentname}')`);
+    } catch(error) {
+        console.log(error);
+    }
 }
 
 //view all departments, view all roles, view all employees, 
@@ -138,9 +188,11 @@ const start = async() => {
             break;
         case "ADD DEPT":
             console.log("you chose add department")
+            addDepartment();
             break;
         case "ADD ROLE":
             console.log("you chose add role")
+            addRole();
             break;
         case "ADD EMP":
             console.log("you chose add employee")
