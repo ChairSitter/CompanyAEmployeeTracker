@@ -268,50 +268,6 @@ const viewEmpByDepartment = async() => {
     return employeeArray;
 }
 
-const deleteDepartment = async() => {
-    const departmentInfo = await viewDepartment();
-    const roleInfo = await viewRole();
-    const departmentPrompt = departmentInfo.map((department) => {
-        return {
-            name: department.name,
-            value: department.id
-        }
-    })
-    const response = await inquirer.prompt([
-        {
-            type: "list",
-            message: "Please choose a department",
-            name: "departmentID",
-            choices: departmentPrompt
-        }
-    ])
-    try {
-        sequelize.query(`DELETE FROM department WHERE id = ${response.departmentID}`);
-    } catch(error) {
-        console.log(error);
-    }
-    for(let i = 0; i < roleInfo.length; i++){
-        if(roleInfo[i].department_id === response.departmentID){
-            try {
-                sequelize.query(`UPDATE role SET department_id = null WHERE department_id = ${response.departmentID}`);
-            } catch(error) {
-                console.log(error);
-            }
-        }
-    }
-
-}
-
-const deleteRole = async() => {
-    const roleInfo = await viewRole();
-
-}
-
-const deleteEmployee = async() => {
-    const employeeInfo = await viewEmployee();
-
-}
-
 const start = async() => {
     console.log("Welcome to Company A Employee Manager.")
     const response = await inquirer.prompt([
@@ -359,18 +315,6 @@ const start = async() => {
                 {
                     name: "Update an employee's manager",
                     value: "UPDATE EMP MANAGER"  
-                },
-                {
-                    name: "Delete department",
-                    value: "DELETE DEPARTMENT"
-                },
-                {
-                    name: "Delete role",
-                    value: "DELETE ROLE"                
-                },
-                {
-                    name: "Delete employee",
-                    value: "DELETE EMPLOYEE"
                 }
             ]
         }
@@ -424,14 +368,7 @@ const start = async() => {
             const employeesByDepartment = await viewEmpByDepartment();
             console.table(employeesByDepartment);
             break;
-        case "DELETE DEPARTMENT":
-            deleteDepartment();
-            break;
     }
 }
-
-// Delete departments, roles, and employees.
-// View the total utilized budget of a department&mdash;
-// in other words, the combined salaries of all employees in that department.
 
 sequelize.sync({force: false}).then(start)
